@@ -105,7 +105,7 @@ public class Convert {
             HelpFormatter formatter = new HelpFormatter();
             formatter.printHelp("OpenUnison Convert to Operator Options", options);
         } else {
-            boolean isDryRun = loadOption(cmd, "dryrun", options).equalsIgnoreCase("true");
+            boolean isDryRun = System.getenv().get("DRY_RUN").equalsIgnoreCase("true");
 
             tokenPath = loadOption(cmd, "tokenPath", options);
             rootCaPath = loadOption(cmd, "rootCaPath", options);
