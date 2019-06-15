@@ -1,0 +1,34 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: openunison-operator-converter
+  namespace: openunison
+spec:
+  template:
+    spec:
+      containers:
+      - name: openunison-operator-converter
+        image: tremolosecurity/openunison-k8s-operator-converter:latest
+        command: ["java", "-jar", "/usr/local/openunison/openunison-k8s-converter.jar","-tokenPath","/var/run/secrets/kubernetes.io/serviceaccount/token" , "-rootCaPath","/var/run/secrets/kubernetes.io/serviceaccount/ca.crt", "-configMaps","/etc/extracerts","-kubernetesURL","https://kubernetes.default.svc.cluster.local","-namespace","openunison"]
+        volumeMounts:
+          - name: extra-certs-dir
+            mountPath: "/etc/extracerts"
+            readOnly: true
+        env:
+          - name: KEEP_SECRET
+            valueFrom:
+              configMapKeyRef:
+                key: KEEP_SECRET
+                name: converter-map
+          - name: DRY_RUN
+            valueFrom:
+              configMapKeyRef:
+                key: DRY_RUN
+                name: converter-map
+      restartPolicy: Never
+      volumes:
+        - name : extra-certs-dir
+          emptyDir: {}
+      serviceAccount: openunison-operator
+      serviceAccountName: openunison-operator
+  backoffLimit: 1

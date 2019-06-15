@@ -15,7 +15,7 @@ RUN apt-get update;apt-get -y install openjdk-8-jdk-headless curl apt-transport-
     groupadd -r openunison -g 433 && \
     mkdir /usr/local/openunison && \
     useradd -u 431 -r -g openunison -d /usr/local/openunison -s /sbin/nologin -c "OpenUnison Operator image user" openunison && \
-    curl https://nexus.tremolo.io/repository/betas/com/tremolosecurity/kubernetes/openunison-k8s-converter/$OPENUNISON_CONVERTER_VERSION/openunison-k8s-converter-$OPENUNISON_CONVERTER_VERSION.jar -o /usr/local/openunison/openunison-k8s-converter.jar
+    curl https://nexus.tremolo.io/repository/releases/com/tremolosecurity/kubernetes/openunison-k8s-converter/$OPENUNISON_CONVERTER_VERSION/openunison-k8s-converter-$OPENUNISON_CONVERTER_VERSION.jar -o /usr/local/openunison/openunison-k8s-converter.jar
 
 
 
