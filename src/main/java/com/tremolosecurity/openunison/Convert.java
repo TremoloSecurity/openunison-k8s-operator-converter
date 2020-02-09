@@ -130,7 +130,7 @@ public class Convert {
 
             // first, pull the secret from the api server
 
-            Map resp = k8s.callWS("/api/v1/namespaces/openunison/secrets/openunison-secrets");
+            Map resp = k8s.callWS("/api/v1/namespaces/" + namespace + "/secrets/openunison-secrets");
             String fromServer = (String) resp.get("data");
 
             JSONParser jsonParser = new JSONParser();
@@ -198,9 +198,9 @@ public class Convert {
 
             System.out.println("Creating static key secret");
             if (isDryRun) {
-                System.out.println("DRY RUN - Create /api/v1/namespaces/openunison/secrets/");
+                System.out.println("DRY RUN - Create /api/v1/namespaces/" + namespace +"/secrets/");
             } else {
-                k8s.postWS("/api/v1/namespaces/openunison/secrets", staticSecret.toJSONString());
+                k8s.postWS("/api/v1/namespaces/" + namespace + "/secrets", staticSecret.toJSONString());
             }
 
             System.out.println("Static key secret created");
@@ -283,7 +283,7 @@ public class Convert {
 
             // image and replicas
 
-            String json = (String) k8s.callWS("/apis/extensions/v1beta1/namespaces/openunison/deployments/openunison")
+            String json = (String) k8s.callWS("/apis/apps/v1/namespaces/" + namespace + "/deployments/openunison")
                     .get("data");
             JSONObject deployment = (JSONObject) jsonParser.parse(json);
 
@@ -335,9 +335,9 @@ public class Convert {
 
             JSONObject sourceSecret = generateSecret("orchestra-secret-source", secretProps);
             if (isDryRun) {
-                System.out.println("Dry Run - Creating /api/v1/namespaces/openunison/secrets/orchestra-secret-source");
+                System.out.println("Dry Run - Creating /api/v1/namespaces/" + namespace + "/secrets/orchestra-secret-source");
             } else {
-                k8s.postWS("/api/v1/namespaces/openunison/secrets", sourceSecret.toJSONString());
+                k8s.postWS("/api/v1/namespaces/" + namespace + "/secrets", sourceSecret.toJSONString());
             }
 
             JSONArray hosts = new JSONArray();
@@ -360,7 +360,7 @@ public class Convert {
             host.put("ingress_name", "openunison");
             host.put("secret_name", "ou-tls-certificate");
 
-            Map res = k8s.callWS("/apis/extensions/v1beta1/namespaces/openunison/deployments/amq", null, -1);
+            Map res = k8s.callWS("/apis/apps/v1/namespaces/" + namespace + "/deployments/amq", null, -1);
             boolean useAmq = false;
 
             String amqServiceBackup = null;
@@ -379,7 +379,7 @@ public class Convert {
                 spec.put("activemq_image", amqObj.get("image"));
 
                 // get the secret
-                resp = k8s.callWS("/api/v1/namespaces/openunison/secrets/amq-secrets");
+                resp = k8s.callWS("/api/v1/namespaces/" + namespace + "/secrets/amq-secrets");
                 fromServer = (String) resp.get("data");
                 secretRoot = (JSONObject) jsonParser.parse(fromServer);
                 keystoreB64 = (String) ((JSONObject) secretRoot.get("data")).get("amq.p12");
@@ -392,14 +392,14 @@ public class Convert {
 
                 useAmq = true;
 
-                res = k8s.callWS("/api/v1/namespaces/openunison/services/amq");
+                res = k8s.callWS("/api/v1/namespaces/" + namespace + "/services/amq");
                 amqServiceBackup = (String) res.get("data");
 
                 if (isDryRun) {
                     System.out.println("Dry Run - Deleting AMQ service");
                 } else {
                     System.out.println("Deleting AMQ service");
-                    k8s.deleteWS("/api/v1/namespaces/openunison/services/amq");
+                    k8s.deleteWS("/api/v1/namespaces/" + namespace + "/services/amq");
                 }
             }
 
@@ -408,7 +408,7 @@ public class Convert {
                 System.out.println(openUnisonCR.toJSONString());
             } else {
                 System.out.println("Deploying CR");
-                k8s.postWS("/apis/openunison.tremolo.io/v1/namespaces/openunison/openunisons",
+                k8s.postWS("/apis/openunison.tremolo.io/v1/namespaces/" + namespace + "/openunisons",
                         openUnisonCR.toJSONString());
             }
 
@@ -420,7 +420,7 @@ public class Convert {
                 JSONObject pspec = new JSONObject();
                 patch.put("spec", pspec);
                 pspec.put("replicas", 0);
-                k8s.patchWS("/apis/extensions/v1beta1/namespaces/openunison/deployments/openunison",
+                k8s.patchWS("/apis/apps/v1/namespaces/" + namespace + "/deployments/openunison",
                         patch.toJSONString());
 
             }
@@ -428,7 +428,7 @@ public class Convert {
             if (isDryRun) {
                 System.out.println("Dry Run - backing up old ingress object and deleting");
             } else {
-                res = k8s.callWS("/apis/extensions/v1beta1/namespaces/openunison/ingresses/openunison-ingress");
+                res = k8s.callWS("/apis/extensions/v1beta1/namespaces/" + namespace + "/ingresses/openunison-ingress");
                 if (((Integer) res.get("code")) == 200) {
                     String jsondata = (String) res.get("data");
                     JSONObject cfgData = new JSONObject();
@@ -437,7 +437,7 @@ public class Convert {
                         cfgData.put("legacyamqservice.json", amqServiceBackup);
                     }
                     System.out.println("Saving legacy ingress to legacy-ingress configmap");
-                    k8s.postWS("/api/v1/namespaces/openunison/configmaps",
+                    k8s.postWS("/api/v1/namespaces/" + namespace + "/configmaps",
                             generateConfigMap("lgeacy-ingress", cfgData).toJSONString());
 
                 }
@@ -445,11 +445,11 @@ public class Convert {
 
             if (isDryRun) {
                 System.out.println(
-                        "Dry Run - Deleting /apis/extensions/v1beta1/namespaces/openunison/ingresses/openunison-ingress");
+                        "Dry Run - Deleting /apis/extensions/v1beta1/namespaces/" + namespace + "/ingresses/openunison-ingress");
             } else {
                 System.out.println(
-                        "Deleting /apis/extensions/v1beta1/namespaces/openunison/ingresses/openunison-ingress");
-                k8s.deleteWS("/apis/extensions/v1beta1/namespaces/openunison/ingresses/openunison-ingress");
+                        "Deleting /apis/extensions/v1beta1/namespaces/" + namespace + "/ingresses/openunison-ingress");
+                k8s.deleteWS("/apis/extensions/v1beta1/namespaces/" + namespace + "/ingresses/openunison-ingress");
 
             }
 
@@ -462,7 +462,7 @@ public class Convert {
                     JSONObject pspec = new JSONObject();
                     patch.put("spec", pspec);
                     pspec.put("replicas", 0);
-                    k8s.patchWS("/apis/extensions/v1beta1/namespaces/openunison/deployments/amq", patch.toJSONString());
+                    k8s.patchWS("/apis/apps/v1/namespaces/" + namespace + "/deployments/amq", patch.toJSONString());
                 }
             }
 
@@ -496,9 +496,9 @@ public class Convert {
         secretObj.put("metadata", metadataObj);
 
         if (isDryRun) {
-            System.out.println("Dry Run - /api/v1/namespaces/openunison/secrets/" + alias);
+            System.out.println("Dry Run - /api/v1/namespaces/" + namespace + "/secrets/" + alias);
         } else {
-            k8s.postWS("/api/v1/namespaces/openunison/secrets", secretObj.toJSONString());
+            k8s.postWS("/api/v1/namespaces/" + namespace + "/secrets", secretObj.toJSONString());
         }
 
         JSONObject keypairObj = new JSONObject();
