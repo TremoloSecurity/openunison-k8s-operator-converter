@@ -8,7 +8,7 @@ spec:
       containers:
       - name: openunison-operator-converter
         image: tremolosecurity/openunison-k8s-operator-converter:latest
-        command: ["java", "-jar", "/usr/local/openunison/openunison-k8s-converter.jar","-tokenPath","/var/run/secrets/kubernetes.io/serviceaccount/token" , "-rootCaPath","/var/run/secrets/kubernetes.io/serviceaccount/ca.crt", "-configMaps","/etc/extracerts","-kubernetesURL","https://kubernetes.default.svc.cluster.local"]
+        command: ["java", "-jar", "/usr/local/openunison/openunison-k8s-converter.jar","-tokenPath","/var/run/secrets/kubernetes.io/serviceaccount/token" , "-rootCaPath","/var/run/secrets/kubernetes.io/serviceaccount/ca.crt", "-configMaps","/etc/extracerts","-kubernetesURL","https://kubernetes.default.svc.cluster.local","-namespace","NAMESPACE"]
         volumeMounts:
           - name: extra-certs-dir
             mountPath: "/etc/extracerts"
